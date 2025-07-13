@@ -1,0 +1,20 @@
+{
+    "name": "jsi",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "nodemon index.mjs",
+        "test": "node --test '**/*.spec.*'"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^5.1.0",
+        "marked": "^16.0.0"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.10"
+    }
+}
