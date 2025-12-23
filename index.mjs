@@ -26,11 +26,52 @@ app.get("/:name", async (req, res) => {
     res.status(200).send(`
       <!DOCTYPE html>
       <html>
-        <head><title>${req.params.name}</title></head>
+        <head>
+          <title>${req.params.name}</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 20px;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            }
+            .mermaid {
+              cursor: grab;
+              transition: transform 0.1s ease-out;
+            }
+            .mermaid:active {
+              cursor: grabbing;
+            }
+            .zoom-controls {
+              position: fixed;
+              top: 20px;
+              right: 20px;
+              display: flex;
+              gap: 10px;
+              z-index: 1000;
+            }
+            .zoom-btn {
+              padding: 10px 15px;
+              background: #0066cc;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 16px;
+            }
+            .zoom-btn:hover {
+              background: #0052a3;
+            }
+          </style>
+        </head>
         <body>
+          <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoomIn()">+</button>
+            <button class="zoom-btn" onclick="zoomOut()">−</button>
+            <button class="zoom-btn" onclick="resetZoom()">Reset</button>
+          </div>
           ${html}
           <script type="module">
-            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs';
             mermaid.initialize({ startOnLoad: true });
             mermaid.registerIconPacks([
               {
@@ -39,6 +80,67 @@ app.get("/:name", async (req, res) => {
                   fetch('https://unpkg.com/@iconify-json/logos@1/icons.json').then((res) => res.json()),
               },
             ]);
+
+            // Pan and Zoom functionality
+            let scale = 1;
+            let panning = false;
+            let pointX = 0;
+            let pointY = 0;
+            let start = { x: 0, y: 0 };
+
+            window.zoomIn = () => {
+              scale *= 1.2;
+              updateTransform();
+            };
+
+            window.zoomOut = () => {
+              scale /= 1.2;
+              updateTransform();
+            };
+
+            window.resetZoom = () => {
+              scale = 1;
+              pointX = 0;
+              pointY = 0;
+              updateTransform();
+            };
+
+            function updateTransform() {
+              document.querySelectorAll('.mermaid').forEach(el => {
+                el.style.transform = \`translate(\${pointX}px, \${pointY}px) scale(\${scale})\`;
+                el.style.transformOrigin = '0 0';
+              });
+            }
+
+            // Mouse wheel zoom
+            document.addEventListener('wheel', (e) => {
+              if (e.target.closest('.mermaid')) {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                scale *= delta;
+                updateTransform();
+              }
+            }, { passive: false });
+
+            // Pan functionality
+            document.addEventListener('mousedown', (e) => {
+              if (e.target.closest('.mermaid')) {
+                panning = true;
+                start = { x: e.clientX - pointX, y: e.clientY - pointY };
+              }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+              if (panning) {
+                pointX = e.clientX - start.x;
+                pointY = e.clientY - start.y;
+                updateTransform();
+              }
+            });
+
+            document.addEventListener('mouseup', () => {
+              panning = false;
+            });
           </script>
         </body>
       </html>
